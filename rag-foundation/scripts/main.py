@@ -7,6 +7,8 @@ from llama_index.core.node_parser import SentenceSplitter
 from vector_store.node import TextNode, VectorStoreQueryResult
 from vector_store.semantic_vector_store import SemanticVectorStore
 from vector_store.sparse_vector_store import SparseVectorStore
+from vector_store.reRankWithST import reRankWithST
+from vector_store.RRF import RRF
 
 
 def prepare_data_nodes(documents: list, chunk_size: int = 200) -> list[TextNode]:
@@ -58,15 +60,25 @@ def prepare_vector_store(documents: list, mode: str, force_index=False, chunk_si
             saved_file="data/dense.csv",
             force_index=force_index,
         )
+    elif mode == "rerank":
+        vector_store = reRankWithST(
+            persist=True,
+            saved_file="data/rerank.csv",
+            force_index=force_index,
+        )
+    elif mode == "rrf":
+        vector_store = RRF(
+            persist=True,
+            saved_file="data/rrf.csv",
+            force_index=force_index,
+        )  
     else:
         raise ValueError("Invalid mode. Choose either `sparse` or `semantic`.")
 
     if force_index:
         nodes = prepare_data_nodes(documents=documents, chunk_size=chunk_size)
         vector_store.add(nodes)
-
     return vector_store
-
 
 class RAGPipeline:
     def __init__(self, vector_store: SemanticVectorStore, prompt_template: str):
@@ -77,8 +89,8 @@ class RAGPipeline:
         self.model = None
 
         # GROQ
-        # from langchain_groq import ChatGroq
-        # self.model = ChatGroq(model="llama3-70b-8192", temperature=0)
+        from langchain_groq import ChatGroq
+        self.model = ChatGroq(model="llama3-70b-8192", temperature = 0)
 
         # OpenAI
         # from langchain_openai import ChatOpenAI
@@ -108,7 +120,7 @@ class RAGPipeline:
 
 
 def main(
-    data_path: Path = Path("data/qasper-test-v0.3.json"),
+    data_path: Path = Path("qasper-test-v0.3.json"),
     output_path: Path = Path("predictions.jsonl"),
     mode: str = "sparse",
     force_index: bool = False,

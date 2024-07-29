@@ -8,7 +8,7 @@ import json
 import re
 import string
 from collections import Counter
-
+from bertScore import BERTScore
 
 def normalize_answer(s):
     """
@@ -107,6 +107,13 @@ def get_answers_and_evidence(data, text_evidence_only):
 
 
 def evaluate(gold, predicted, retrieval_only=False):
+    max_answer_BertScoref1s = []
+    max_answer_BertScoref1s_by_type = {
+        "extractive": [],
+        "abstractive": [],
+        "boolean": [],
+        "none": [],
+    }
     max_answer_f1s = []
     max_evidence_f1s = []
     max_answer_f1s_by_type = {
@@ -121,7 +128,26 @@ def evaluate(gold, predicted, retrieval_only=False):
             num_missing_predictions += 1
             max_answer_f1s.append(0.0)
             max_evidence_f1s.append(0.0)
+            max_answer_BertScoref1s.append(0.0)
             continue
+
+        ## BertScore
+        Bscore = BERTScore()
+        answer_BERTscoref1s_and_types = [
+            (
+                Bscore.calculate_bertscore(predicted[question_id]["answer"],reference["answer"]),
+                reference["type"],
+            )
+            for reference in gold[question_id]
+        ]
+        max_answer_BertScoref1, answer_type = sorted(
+            answer_BERTscoref1s_and_types, key=lambda x: x[0], reverse=True
+        )[0]
+        print(max_answer_BertScoref1)
+        max_answer_BertScoref1s.append(max_answer_BertScoref1)
+        max_answer_BertScoref1s_by_type[answer_type].append(max_answer_BertScoref1)
+
+        ## f1 score
         answer_f1s_and_types = [
             (
                 token_f1_score(predicted[question_id]["answer"], reference["answer"]),
@@ -134,6 +160,8 @@ def evaluate(gold, predicted, retrieval_only=False):
         )[0]
         max_answer_f1s.append(max_answer_f1)
         max_answer_f1s_by_type[answer_type].append(max_answer_f1)
+        
+        ## evidence
         evidence_f1s = [
             paragraph_f1_score(
                 predicted[question_id]["evidence"], reference["evidence"]
@@ -146,6 +174,10 @@ def evaluate(gold, predicted, retrieval_only=False):
 
     if not retrieval_only:
         return {
+            "Bert score F1": mean(max_answer_BertScoref1s),
+            "Bert score F1 by type": {
+                key: mean(value) for key, value in max_answer_BertScoref1s_by_type.items()
+            },
             "Answer F1": mean(max_answer_f1s),
             "Answer F1 by type": {
                 key: mean(value) for key, value in max_answer_f1s_by_type.items()
