@@ -81,7 +81,7 @@ python -m scripts.main \
 
 where some arguments can be:
 
-- `mode`: `sparse` or `semantic`
+- `mode`: `sparse` or `semantic` or `rerank` or `rrf` (beta) 
 - `force_index`: `True` or `False` (True: override the old vectorstore index)
 - `retrieval_only`: `True` or `False` (True: just get the retrieval contexts, answers are empty)
 
@@ -97,11 +97,11 @@ If you don't have access to OpenAI API, use Groq free-tier instead:
 
 ### 3. **Run Evaluation:**
 ```sh
-python evaluate.py --predictions predictions.jsonl --gold data/qasper-test-v0.3.json --retrieval_only
+python evaluate.py --predictions output/predictions.jsonl --gold qasper-test-v0.3.json --retrieval_only
 ```
 $\rightarrow$ just evaluate the retrieval contexts.
 
 ```sh
-python evaluate.py --predictions predictions.jsonl --gold data/qasper-test-v0.3.json
+python evaluate.py --predictions output/predictions.jsonl --gold qasper-test-v0.3.json
 ```
 $\rightarrow$ evaluate both the retrieval contexts and answers.
