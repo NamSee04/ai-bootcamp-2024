@@ -81,7 +81,7 @@ python -m scripts.main \
 
 where some arguments can be:
 
-- `mode`: `sparse` or `semantic` or `rerank` or `rrf` (beta) 
+- `mode`: `sparse` or `semantic` or `rerank` or `rrf`
 - `force_index`: `True` or `False` (True: override the old vectorstore index)
 - `retrieval_only`: `True` or `False` (True: just get the retrieval contexts, answers are empty)
 
